@@ -15,6 +15,7 @@
 import inspect
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Union
+import numpy as np
 
 import torch
 from packaging import version
@@ -512,6 +513,34 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
         latents = latents * self.scheduler.init_noise_sigma
         return latents
 
+    def spacer(self, start, end, num_points):
+    # Generate a linear range between 0 and 1, then scale it exponentially
+        exp_factor = np.log(end / start)  # Calculate the factor for exponential growth
+
+        # Generate points
+        points = start * np.exp(np.linspace(0, exp_factor, num_points))
+        return points
+
+    def spacer_with_sinusoid(self, start, end, num_points, amplitude, frequency):
+        exp_factor = np.log(end / start)
+
+        # Generate linearly spaced values between 0 and 1
+        linear_space = np.linspace(0, exp_factor, num_points)
+
+        # Generate exponential growth points
+        exponential_growth = start * np.exp(linear_space)
+
+        # Calculate declining amplitude: this could be exponential or linear decay
+        decaying_amplitude = amplitude * np.exp(-linear_space) ** 8  # Exponential decay of amplitude
+
+        # Generate sinusoidal fluctuations with decaying amplitude
+        sinusoidal_fluctuation = decaying_amplitude * np.sin(2 * np.pi * frequency * linear_space / exp_factor)
+
+        # Combine exponential growth with sinusoidal fluctuation
+        points = exponential_growth + sinusoidal_fluctuation
+
+        return points
+
     @torch.no_grad()
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
@@ -657,6 +686,8 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
 
         # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
+        
+        guidance_scale_override = self.spacer_with_sinusoid(4.5, 5.0, len(timesteps), 0.5, 10)[::-1]
 
         # 7. Denoising loop
         num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
@@ -678,6 +709,7 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
                 # perform guidance
                 if do_classifier_free_guidance:
                     noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
+                    guidance_scale = guidance_scale_override[i]
                     noise_pred = noise_pred_uncond + guidance_scale * (noise_pred_text - noise_pred_uncond)
 
                 if do_classifier_free_guidance and guidance_rescale > 0.0:
