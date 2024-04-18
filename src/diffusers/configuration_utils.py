@@ -330,7 +330,9 @@ class ConfigMixin:
 
         if os.path.isfile(pretrained_model_name_or_path):
             config_file = pretrained_model_name_or_path
+            print("FIRST", pretrained_model_name_or_path)
         elif os.path.isdir(pretrained_model_name_or_path):
+            print("SECOND", pretrained_model_name_or_path)
             if os.path.isfile(os.path.join(pretrained_model_name_or_path, cls.config_name)):
                 # Load from a PyTorch checkpoint
                 config_file = os.path.join(pretrained_model_name_or_path, cls.config_name)
@@ -343,6 +345,7 @@ class ConfigMixin:
                     f"Error no file named {cls.config_name} found in directory {pretrained_model_name_or_path}."
                 )
         else:
+            print("THIRD", pretrained_model_name_or_path)
             try:
                 # Load from URL or cache if already cached
                 config_file = hf_hub_download(
