@@ -330,9 +330,9 @@ class ConfigMixin:
 
         if os.path.isfile(pretrained_model_name_or_path):
             config_file = pretrained_model_name_or_path
-            print("FIRST", pretrained_model_name_or_path)
+            print("FIRST", pretrained_model_name_or_path, os.listdir(pretrained_model_name_or_path))
         elif os.path.isdir(pretrained_model_name_or_path):
-            print("SECOND", pretrained_model_name_or_path)
+            print("SECOND", pretrained_model_name_or_path, os.listdir(pretrained_model_name_or_path))
             if os.path.isfile(os.path.join(pretrained_model_name_or_path, cls.config_name)):
                 # Load from a PyTorch checkpoint
                 config_file = os.path.join(pretrained_model_name_or_path, cls.config_name)
