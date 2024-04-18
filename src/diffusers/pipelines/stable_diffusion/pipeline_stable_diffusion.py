@@ -687,7 +687,7 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
         # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
         
-        guidance_scale_override = self.spacer_with_sinusoid(3.5, 5.0, len(timesteps), 0.5, 10)[::-1]
+        guidance_scale_override = self.spacer_with_sinusoid(4.5, 5.0, len(timesteps), 0.5, 10)[::-1]
 
         # 7. Denoising loop
         num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
